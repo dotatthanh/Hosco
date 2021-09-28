@@ -67,10 +67,10 @@
                         </button>
                     @endif
 
-                    <form action="{{ route('order.selOrder.change_status', $order->Id) }}" method="POST">
+                    {{-- <form action="{{ route('order.delivery.change_status', $order->Id) }}" method="POST">
                         @csrf
                         <button class="btn btn-success">Chuyển trạng thái</button>
-                    </form>
+                    </form> --}}
                 {{-- </form> --}}
             </div>
 

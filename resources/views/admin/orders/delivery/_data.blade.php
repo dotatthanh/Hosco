@@ -5,13 +5,24 @@
             {{$order->OrderCode}}
         </td>
         <td>{{ $order->OrderDate }}</td>
-        <td class="center">{{$order->CustomerName}}</td>
-        <td class="center">{{$order->EmployeeName}}</td>
+        <td class="center">{{ $order->CustomerName }}</td>
+        <td class="center">{{ $order->EmployeeName }}</td>
         {{-- <td class="center">{{ $order->OrderStatus }}</td> --}}
-        @php
-            $status = App\Helpers\HttpHelper::getInstance()->get("PurchaseOrder/GetListDeliverStatus?orderId=e049f385-f75e-4703-baa4-09f2d63bb0ea");
-        @endphp
-        {{-- <td class="center">{{ $status }}</td> --}}
+        <td class="center">
+            @if ($order->Status == "-1")
+                Chờ xác nhận
+            @elseif ($order->Status == "0")
+                Đã xác nhận
+            @elseif ($order->Status == "1")
+                Đang giao
+            @elseif ($order->Status == "2")
+                Đã giao
+            @elseif ($order->Status == "3")
+                Thất bại
+            @else
+                Chờ xác nhận
+            @endif
+        </td>
         <td class="center">{{ $order->Discount }}</td>
         <td class="bolder text-right">{{ number_format($order->TotalMoney) }}</td>
 

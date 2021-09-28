@@ -88,6 +88,20 @@ class HttpHelper
         return json_decode($response->getBody(), $assoc);
     }
 
+    public function get2($endpoint, $page = 1, $assoc = false) {
+        $page = intval($page);
+        $response = $this->guzzle->get($this->cleanEndpoint($endpoint), [
+            'headers' => [
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+                'timeout' => 60,
+                'Authorization' => 'Bearer '. session()->get('token')
+            ],
+        ]);
+        
+        return json_decode($response->getBody(), $assoc);
+    }
+
     /**
      * @param $endpoint
      * @param $array - Array of data to be JSON encoded

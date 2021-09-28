@@ -27,7 +27,8 @@
 		"srmklive/paypal": "^1.6",
 		"symfony/http-foundation": "4.4.2",
 		"wemersonjanuario/wkhtmltopdf-windows": "0.12.2.3",
-		"willvincent/laravel-rateable": "^2.0"
+		"willvincent/laravel-rateable": "^2.0",
+		"zaloplatform/zalo-php-sdk": "^2.0"
 	},
 	"require-dev" : {
 		"barryvdh/laravel-ide-helper" : "^2.8",
