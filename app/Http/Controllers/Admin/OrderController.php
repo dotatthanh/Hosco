@@ -86,6 +86,19 @@ class OrderController extends Controller
 
             $result = HttpHelper::getInstance()->post($urlAffix, $params);
 
+            // Lấy trạng thái đơn giao hàng
+            if ($type == 'delivery') {
+                foreach ($result->data as $order_delivery) {
+                    $result_api_list_deliver_status = HttpHelper::getInstance()->get2("PurchaseOrder/GetListDeliverStatus?orderId=".$order_delivery->Id);
+                    if (count($result_api_list_deliver_status->data) > 0) {
+                        $order_delivery->Status = $result_api_list_deliver_status->data[0]->Status;
+                    }
+                    else {
+                        $order_delivery->Status = '';
+                    }
+                }
+            }
+
             $TotalMoney = $result->Extra->TotalMoney;
             $orders = $result->data;
             foreach ($orders as $k => $od) {
@@ -754,27 +767,45 @@ class OrderController extends Controller
         $order = null;
         $type = 'delivery';
 
-        return view('admin.orders.delivery.edit', compact('order', 'type', 'id'));
+        $result = HttpHelper::getInstance()->get2("PurchaseOrder/GetListDeliverStatus?orderId=".$id);
+        if (count($result->data) > 0) {
+            $status = $result->data[0]->Status;
+        }
+        else {
+            $status = '';
+        }
+
+        return view('admin.orders.delivery.edit', compact('order', 'type', 'id', 'status'));
     }
 
-    public function changeStatus($id) {
+    public function changeStatus(Request $request, $id) {
         try {
             $params = [
                 "Id" => "",
                 "OrderId" => $id,
-                "Status" => "2",
+                "Status" => $request->status,
                 "Note" => "test",
                 "Created_By" => auth()->user()->username,
-                "Created_At" => "2021-09-23T12:34:45.809Z"
+                "Created_At" => date("Y-m-d H:i:s")
             ];
-            // dd($params);
-            
-            $result = HttpHelper::getInstance()->post("PurchaseOrder/UpdateDeliverStatus", $params);
-            // $result = HttpHelper::getInstance()->get("PurchaseOrder/GetListDeliverStatus?orderId=e049f385-f75e-4703-baa4-09f2d63bb0ea");
-            dd($result);
 
-            return redirect()->back();
+            // API cập nhật trạng thái đơn giao
+            $result = HttpHelper::getInstance()->post("PurchaseOrder/UpdateDeliverStatus", $params);
+
+            // gửi mail khi trạng thái đã giao
+            if ($result->meta->status_code == 0 && $request->status == 2) {
+                // API chi tiết đơn hàng
+                $result = HttpHelper::getInstance()->get("PurchaseOrder/GetPurchaseOrderDetail/$id");
+                $order = $result->data;
+
+                if ($order->CustomerEmail != "") {
+                    Mail::to($order->CustomerEmail)->send(new SuccessfulDelivery($customer, $params));
+                }
+            }
+
+            return redirect()->route('order.index', 'delivery');
         } catch (ClientException $exception) {
+            dd($exception->getMessage());
             logger()->critical($exception->getMessage(), $this->headers);
         }
     }

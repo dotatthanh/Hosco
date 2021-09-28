@@ -71,8 +71,8 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'checkRole']], funct
 
     Route::post('income/create','Admin\OrderController@createIncome')->name('order.selOrder.create_income');
 
-    Route::post('orders/change-status/{id}','Admin\OrderController@changeStatus')->name('order.selOrder.change_status');
     Route::get('orders/delivery/update-status/{id}', 'Admin\OrderController@editDeliveryStatus')->name('order.edit-delivery-status');
+    Route::post('orders/delivery/change-status/{id}','Admin\OrderController@changeStatus')->name('order.delivery.change_status');
 
     /*---------------Customer Routes------------------*/
     Route::resource('customer', 'Admin\CustomerController');

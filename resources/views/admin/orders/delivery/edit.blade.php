@@ -8,23 +8,22 @@
     <div class="box box-info">
         <div class="box-header">
             <i class="ace-icon fa fa-edit orange" aria-hidden="true"></i>
-            <h3 class="box-title">Sửa đơn hàng</h3>
+            <h3 class="box-title">Cập nhật trạng thái giao hàng</h3>
         </div>
         <div class="box-body">
 
-            <form action="{{ route("admin.orders.update", ['type' => $type, 'id' => $id]) }}" method="POST" id="create-order-form">
+            <form action="{{ route("order.delivery.change_status", $id) }}" method="POST" id="create-order-form">
             @csrf
                 <div class="row">
                     <div class="form-group col-md-6 col-lg-6 col-xs-12">
-                        <label class="control-label no-padding-right" for="status">Chi nhánh</label>
+                        <label class="control-label no-padding-right" for="status">Trạng thái giao hàng</label>
                         <div class="clearfix">
                             <select name="status" class="form-control" id="status" required>
-                                <option value="">-- Chọn chi nhánh --</option>
-                                    <option value="-1" @if(777 == -1) selected @endif>Chờ xác nhận</option>
-                                    <option value="0" @if(777 == 0) selected @endif>Đã xác nhận</option>
-                                    <option value="1" @if(777 == 1) selected @endif>Đang giao</option>
-                                    <option value="2" @if(777 == 2) selected @endif>Đã giao</option>
-                                    <option value="3" @if(777 == 3) selected @endif>Thất bại</option>
+                                    <option value="-1" @if($status == '-1') selected @endif>Chờ xác nhận</option>
+                                    <option value="0" @if($status == "0") selected @endif>Đã xác nhận</option>
+                                    <option value="1" @if($status == "1") selected @endif>Đang giao</option>
+                                    <option value="2" @if($status == "2") selected @endif>Đã giao</option>
+                                    <option value="3" @if($status == "3") selected @endif>Thất bại</option>
                             </select>
                         </div>
                     </div>

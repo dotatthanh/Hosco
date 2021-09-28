@@ -17,7 +17,7 @@ class SuccessfulDelivery extends Mailable
      *
      * @return void
      */
-    public function __construct($order)
+    public function __construct(array $order)
     {
         $this->order = $order;
     }
