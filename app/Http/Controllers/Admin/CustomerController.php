@@ -64,12 +64,8 @@ class CustomerController extends Controller
                 "PageIndex" => $page > 0 ? $page - 1 : $page
             ];
             // dd($params);
-            // dd(date("d-m"));
-            // dd(date("d-m", strtotime("2021-04-15T19:38:09.75")));
 
             $result = HttpHelper::getInstance()->post("Category/CustomerList", $params);
-
-
 
             $data = new LengthAwarePaginator($result->data, $result->paging->TotalCount, $params['PageSize'], $page,
                 ['path' => Paginator::resolveCurrentPath(), 'lastPage' => $result->paging->TotalPage]

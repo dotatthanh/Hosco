@@ -44,8 +44,10 @@ class HPBDCustomer extends Command
         $credentials = ['username' => 'admin', 'password' => "1", 'tenantCode' => "hosco"];
         $login = Auth::attempt($credentials);
 
-        // $today = "20-09";
-        $today = date("d-m");
+        // Test theo ngày chỉ định
+        $today = date("20-09");
+        // Ngày hôm nay
+        // $today = date("d-m");
         $params = [
             "SearchText" => "",
             "Email" => "",
@@ -64,6 +66,24 @@ class HPBDCustomer extends Command
             if ($customer->BirthDay != "" && $birthday == $today) {
                 if ($customer->Email != "") {
                     Mail::to($customer->Email)->send(new HappyBirthdayCustomerMail($customer));
+                }
+                if ($customer->Tel != "") {
+                    // gửi sms
+                    $APIKey = env('API_KEY');
+                    $SecretKey = env('SECRET_KEY');
+                    $YourPhone = $customer->Tel;
+                    $Content = "Cam on quy khach da su dung dich vu cua chung toi. Chuc quy khach mot ngay tot lanh!";
+
+                    $SendContent = urlencode($Content);
+                    $data = "http://rest.esms.vn/MainService.svc/json/SendMultipleMessage_V4_get?Phone=$YourPhone&ApiKey=$APIKey&SecretKey=$SecretKey&Content=$SendContent&Brandname=Baotrixemay&SmsType=2";
+                    
+                    $curl = curl_init($data); 
+                    curl_setopt($curl, CURLOPT_FAILONERROR, true); 
+                    curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true); 
+                    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true); 
+                    $result = curl_exec($curl); 
+
+                    $obj = json_decode($result,true);
                 }
             }
         }
