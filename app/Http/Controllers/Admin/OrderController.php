@@ -293,11 +293,48 @@ class OrderController extends Controller
         if ($res['success'] == true && $type == 'purchase') {
             // gửi mail
             $result = HttpHelper::getInstance()->get("Category/GetCustomerInfo/$customerId");
-            $customer = $result->data;
+            // $customer = $result->data;
+            // convert obj to array
+            $customer = @json_decode(json_encode($result->data), true);
 
-            // dd($customer, $params);
-            if ($customer->Email != "") {
-                Mail::to($customer->Email)->send(new OrderSuccess($customer, $params));
+            if ($customer['Email'] != "") {
+                $params['PaymentMethod'] = $params['CashMoney'] ? 'Tiền mặt' : 'Chuyển khoản';
+                Mail::to($customer['Email'])->send(new OrderSuccess($customer, $params));
+            }
+
+            if ($customer['Tel'] != "") {
+                // gửi sms
+                $APIKey = env('API_KEY');
+                $SecretKey = env('SECRET_KEY');
+                $YourPhone = $customer['Tel'];
+                $Content = "Cam on quy khach da su dung dich vu cua chung toi. Chuc quy khach mot ngay tot lanh!";
+
+                $SendContent = urlencode($Content);
+                $data = "http://rest.esms.vn/MainService.svc/json/SendMultipleMessage_V4_get?Phone=$YourPhone&ApiKey=$APIKey&SecretKey=$SecretKey&Content=$SendContent&Brandname=Baotrixemay&SmsType=2";
+                //De dang ky brandname rieng vui long lien he hotline 0901.888.484 hoac nhan vien kinh Doanh cua ban
+                $curl = curl_init($data); 
+                curl_setopt($curl, CURLOPT_FAILONERROR, true); 
+                curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true); 
+                curl_setopt($curl, CURLOPT_RETURNTRANSFER, true); 
+                $result = curl_exec($curl); 
+
+                $obj = json_decode($result,true);
+                // dd($obj);
+                
+                // if($obj['CodeResult']==100)
+                // {
+                //     print "<br>";
+                //     print "CodeResult:".$obj['CodeResult'];
+                //     print "<br>";
+                //     print "CountRegenerate:".$obj['CountRegenerate'];
+                //     print "<br>";     
+                //     print "SMSID:".$obj['SMSID'];
+                //     print "<br>";
+                // }
+                // else
+                // {
+                //     print "ErrorMessage:".$obj['ErrorMessage'];
+                // }
             }
         }
         
@@ -689,79 +726,6 @@ class OrderController extends Controller
         );
     }
 
-    
-
-    // public function list_delivery_order(Request $request, $type)
-    // {
-    //     $locations = [];
-    //     $employees = [];
-    //     $data = [];
-    //     $page = $request->get('page', (Paginator::resolveCurrentPage() ?: 1));
-    //     $TotalMoney = 0;
-
-    //     $searchByOrderInfo = $request->get('searchByOrderInfo', '');
-    //     $searchByCustomerInfo = $request->get('searchByCustomerInfo', '');
-    //     $searchByProductInfo = $request->get('searchByProductInfo', '');
-    //     $filterType = $request->get('filterType', 5);
-    //     $locationId = $request->get('locationId', "");
-    //     $employeeId = $request->get('employeeId', "");
-    //     $orderStatus = $request->get('orderStatus', -1);
-    //     $dates = $request->get('dates');
-
-    //     $startDate = Carbon::now()->toDateString();
-    //     $endDate = Carbon::now()->toDateString();
-    //     if($dates != null) {
-    //         $dateTmp = explode('-', $dates);
-    //         $startDate = Carbon::parse(str_replace('/', '-', trim($dateTmp[0])))->format('Y-m-d');
-    //         $endDate = Carbon::parse(str_replace('/', '-', trim($dateTmp[1])))->format('Y-m-d');
-    //     }
-
-    //     $view = 'admin.orders.selOrders.index';
-    //     $urlAffix = 'SelOrder/SelOrderList';
-    //     if($type == 'purchase') {
-    //         $view = 'admin.orders.purchase.index';
-    //         $urlAffix = 'PurchaseOrder/PurchaseOrderList';
-    //     }
-
-    //     try {
-    //         $locations = getLocationList();
-    //         $employees = getEmployeeList();
-
-    //         $params = [
-    //             "FilterType" => $filterType?:5,
-    //             "FromDate" => $startDate,
-    //             "ToDate" => $endDate,
-    //             "LocationId" => $locationId?:'',
-    //             "OrderStatus" => (int)$orderStatus?:0,
-    //             "SearchByOrderInfo" => $searchByOrderInfo?:'',
-    //             "SearchByCustomerInfo" => $searchByCustomerInfo?:'',
-    //             "SearchByProductInfo" => $searchByProductInfo?:'',
-    //             "PageSize" => env('PER_PAGE', 20),
-    //             "PageIndex" => $page > 0 ? $page - 1 : $page
-    //         ];
-
-    //         $result = HttpHelper::getInstance()->post($urlAffix, $params);
-
-    //         $TotalMoney = $result->Extra->TotalMoney;
-    //         $orders = $result->data;
-    //         foreach ($orders as $k => $od) {
-    //             $order = HttpHelper::getInstance()->get("SelOrder/GetSelOrderDetail/" . $od->Id);
-    //             $orders[$k]->Detail = $order->data;
-    //         }
-
-    //         $data = new LengthAwarePaginator($orders, $result->paging->TotalCount, $result->paging->PageSize, $page,
-    //             ['path' => Paginator::resolveCurrentPath(), 'lastPage' => $result->paging->TotalPage]
-    //         );
-    //         view()->share('totalMoney', $data->sum('TotalMoney'));
-    //     } catch (ClientException $exception) {
-    //         logger()->critical($exception->getMessage(), $this->headers);
-    //     }
-
-    //     return view($view, compact('TotalMoney', 'data',
-    //         'locations', 'employees', 'searchByOrderInfo', 'searchByCustomerInfo', 'searchByProductInfo',
-    //         'orderStatus', 'locationId', 'employeeId', 'dates', 'type'));
-    // }
-
     public function editDeliveryStatus(Request $request, $id)
     {
         $order = null;
@@ -796,10 +760,30 @@ class OrderController extends Controller
             if ($result->meta->status_code == 0 && $request->status == 2) {
                 // API chi tiết đơn hàng
                 $result = HttpHelper::getInstance()->get("PurchaseOrder/GetPurchaseOrderDetail/$id");
-                $order = $result->data;
+                // $order = $result->data;
+                $order = @json_decode(json_encode($result->data), true);;
+                // dd($order);
+                if ($order['CustomerEmail'] != "") {
+                    Mail::to($order['CustomerEmail'])->send(new SuccessfulDelivery($order));
+                }
 
-                if ($order->CustomerEmail != "") {
-                    Mail::to($order->CustomerEmail)->send(new SuccessfulDelivery($customer, $params));
+                if ($order['CustomerPhone'] != "") {
+                    // gửi sms
+                    $APIKey = env('API_KEY');
+                    $SecretKey = env('SECRET_KEY');
+                    $YourPhone = $order['CustomerPhone'];
+                    $Content = "Cam on quy khach da su dung dich vu cua chung toi. Chuc quy khach mot ngay tot lanh!";
+
+                    $SendContent = urlencode($Content);
+                    $data = "http://rest.esms.vn/MainService.svc/json/SendMultipleMessage_V4_get?Phone=$YourPhone&ApiKey=$APIKey&SecretKey=$SecretKey&Content=$SendContent&Brandname=Baotrixemay&SmsType=2";
+
+                    $curl = curl_init($data); 
+                    curl_setopt($curl, CURLOPT_FAILONERROR, true); 
+                    curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true); 
+                    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true); 
+                    $result = curl_exec($curl); 
+
+                    $obj = json_decode($result,true);
                 }
             }
 

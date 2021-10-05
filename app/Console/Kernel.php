@@ -27,7 +27,11 @@ class Kernel extends ConsoleKernel
         // $schedule->command('inspire')
         //          ->hourly();
 
-        $schedule->command('hpbd:cron')->daily();
+
+        // Lên serve thì đặt thời gian theo ngày như này
+        // $schedule->command('hpbd:cron')->dailyAt('08:00');
+        // Test
+        $schedule->command('hpbd:cron')->everyMinute();
     }
 
     /**
